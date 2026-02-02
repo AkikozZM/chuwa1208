@@ -1,60 +1,131 @@
-1. List all of the annotations you learned from this class session.
-@Component
-@Service
-@Repository
-@Controller
-@RestController
-@Autowired
-@Qualifier
-@Primary
-@Configuration 
-@Bean 
-@ComponentScan 
-@RequestMapping 
-@GetMapping 
-@PostMapping 
-@PutMapping 
-@DeleteMapping 
-@SpringBootApplication 
-@Entity 
-@Table 
-@Id 
-@GeneatedValue 
-@Column 
-@OneToOne 
-@OneToMany 
-@ManyToOne 
-@ManyToMany 
-@JoinColumn 
-@Transactional 
-@Async 
+2. Explain TLS, PKI, certificate, public key, private key, and signature.
+TLS: Transport Layer security
+A security protocol that encrypts data sent between browser and server.
+
+PKI: Public Key Infrasturcture
+A system that manages trust on the internet
 
 
+Certificate:
+A digital ID for web and server
 
-2. Explain tight coupling vs loose coupling and what does Spring IOC do?
-Tight Coupling: A class has a concret implementation of another class.
-Loose Coupling: A class depends on an abstraction such as Interface.
-Spring IOC: Inversion of Control, it's Bean Factory that manage the program lifecycle and dependency injection.
+Public Key:
+A key that everyone can see
 
+Private Key:
+A secret key that used with public key together to verify requests.
 
-3. What is MVC pattern?
-Model: Data object that can be used in database
-View: Front-end, user can see it.
-Controller: API methods.
-
-4. What is Front-Controller?
-A design pattern where a single central controller handles all incoming requests and delegates them to appropriate handlers.
-
-5. Explain DispatcherServlet and how it works.
-DispatcherServlet is the Front Controller of Spring MVC.
-It receives all incoming HTTP requests, corrdinates the entire request-response workflow, and delegates work to the right components.
-
-6. What is JSP and What is Model And View？
-JSP: JavaServer Pages. It used for displaying front-end page and can recieve the data from back-end.
+Signature:
+A way to prove authenticity and integrity of the data.
 
 
-7. Explain servlet and servlet container , name some servlet implementations and servlet containers
-other than tomcat
-Servlet is a Java class that runs on a web server and handles HTTP requests and response.
-For example:
-Jetty, Undertow, GlassFish, and Tomcat (most popular)
+3. Write a Spring security based application, which provides https APIs (one simple get controller with empty
+response is good enough )instead of http, please generate a self-signed certificate to make your https
+TLS verfication work.
+- See Coding
+
+
+4. list all http status codes that related to authentication and authorization failures.
+401: Unauthorized
+403: Forbidden
+400: Bad RequestMapping
+404: Not Found
+
+5. Compare authentication and authorization? 
+Name and explain important components in Spring security that undertake authentication and authorization
+- Authentication:
+A way to represent user's identity
+
+DaoAuthenticationProvider, JwtAuthenticationProvider
+
+- Authorization:
+How many places can a user access.
+
+ROLE_USER, ROLE_ADMIN
+
+
+6. Explain HTTP Session?
+A way for web server to remember a user across multiple HTTP requests.
+User login -> server creates session
+
+7. Explain Cookie?
+A small piece of data that server asks the browser to store and send back with requests.
+
+8. Compare Session and Cookie?
+Session is storaged on Server, Cookie is storaged on Browser.
+
+9. Find at least TWO websites who can be logged in using your Google Account, explain in detail on how
+Google SSO works with screenshots like below, find SSO-related Rest calls in Chrome developer tool:
+LaTeX, HackerRank, Spectrum
+Screenshots see Latex1.png and Latex2.png
+
+
+10. How do we use session and cookie to keep user information across the the application?
+Cookie: store session id on the client
+Session: store user data on the server
+
+
+11. What is the spring security filter?
+Spring Security uses a filter chain to secure requests before controllers run.
+It is implemented as Servlet Filters, run before DispatcherServlet.
+It handles Authentication, Authorization, CSRF, Session Management, JWT validation
+
+12. Explain bearer token and how JWT works.
+A token sent in HTTP header, whoever holds it, prove the itentity by itself.
+
+13. Explain how do we store sensitive user information such as password and credit card number in DB?
+Hash the password
+
+14. Compare UserDetailService, AuthenticationProvider, AuthenticationManager, AuthenticationFilter?
+AuthenticationFilter:	    Intercepts login/JWT request
+AuthenticationManager:	    Orchestrates authentication
+AuthenticationProvider:	    Validates credentials
+UserDetailsService: 	    Loads user from DB
+
+
+15. What is the disadvantage of Session? how to overcome the disadvantage?
+-Server memory usage
+-Not scalable (stateful)
+-Session replication needed
+-Sticky sessions in load balancers
+
+16. how to get value from application.properties in Spring security?
+Use @Value:
+@Value("${jwt.secret}")
+private String secret;
+
+Use @ConfigurationProperties:
+@ConfigurationProperties(prefix = "jwt")
+public class JwtConfig {
+    private String secret;
+}
+
+
+17. What is the role of configure(HttpSecurity http) and configure(AuthenticationManagerBuilder auth)?
+configure(HttpSecurity http):
+http
+  .authorizeHttpRequests()
+  .requestMatchers("/admin").hasRole("ADMIN")
+  .anyRequest().authenticated();
+
+Controls:
+- URL security
+- CSRF
+- Session policy
+- Filters
+
+configure(AuthenticationManagerBuilder auth):
+auth
+  .userDetailsService(userDetailsService)
+  .passwordEncoder(passwordEncoder);
+
+Controls:
+- User source
+- Password encoding
+- Authentication providers
+
+
+19. Explain best practices to securely store secrets in applications.
+- Do not hard code secrets
+- Do not commit secrets
+- Do not response any secrets related data in front-end
