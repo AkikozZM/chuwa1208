@@ -1,0 +1,71 @@
+Conceptual Questions
+1. In the CAP theorem, why is Partition Tolerance (P) considered mandatory in a real distributed system?
+Given that P is mandatory, what is the actual trade-off a system designer must make?
+Partitions are inevitable. We cannot build a network that is 100% reliable. Hence, a distributed system must be able to
+hanlde a network break. The actual trade-off is given a partition, the real choice is CP and AP
+CP: Consistency Partition: if a partition occurs, the system refuses to answer requests to ensure very node has the same Data
+AP: Availability Parition: If a partition occurs, node keep answering request even if they cannot talk.
+
+2. Explain the difference between linearizability and eventual consistency. Give one real-world system
+example for each.
+Linearizability: The strongest consistency model. Once a write is successful, all subsequent reads from any client must see that value.
+example: Google Spanner
+
+Eventual Consistency: If no new updates are made, eventually all accesses will return the last update value
+
+
+3. What is a vector clock? How does it determine whether two events are causally related or concurrent?
+Why can't we simply use physical timestamps instead?
+Vector Clock is a counter associated with each node in a system used to track the logical history of updates.
+If all elements in vector A are less than or equal to vector B, then A happened before Breaker
+We cannot simply use physical timestamps because in distrubuted system, local oscillators drift. Different machine has different time clock.
+
+
+
+4. In single-leader replication, what is the split-brain problem during failover, and why is it dangerous?
+he Problem: During a failover, the system thinks the leader is dead and elects a new one. 
+However, the old leader might still be alive (just partitioned). 
+If both leaders start accepting writes, you have "split-brain." 
+
+The Danger: Data corruption and loss. Both leaders may update the same record with different values, 
+creating conflicting histories that are incredibly difficult (or impossible) to merge later.
+
+
+5. Describe the quorum condition (W + R > N) in leaderless (Dynamo-style) replication. What happens if
+this condition is not satisfied?
+If not satisfied: You might perform a "stale read," where the system returns old data because 
+the read set didn't hit any of the nodes that received the latest write.
+
+
+6. Compare Two-Phase Commit (2PC) and the Saga pattern for distributed transactions. What is the main
+weakness of 2PC that Saga avoids, and what guarantee does Saga sacrifice in return?
+
+2PC Weakness: It is a blocking protocol. If the coordinator fails during the "prepare" phase, all participants remain locked, holding resources and waiting for a decision.
+
+Saga Sacrifice: Sagas sacrifice Atomicity/Isolation (the 'I' in ACID). 
+Since Sagas consist of local transactions with "compensating actions" to roll back, 
+other users can see "partial" results of a transaction before it is fully complete or rolled back.
+
+
+7. In the Raft consensus algorithm, why does a candidate need its log to be at least as up-to-date as the
+majority of the cluster in order to win an election? What safety property does this guarantee?
+Raft ensures that a candidate can only be elected if its log contains all committed entries.
+
+
+8. What is a CRDT (Conflict-free Replicated Data Type)? Explain how a G-Counter works and why it always
+converges without coordination.
+A data structure that can be updated independently on multiple nodes; those updates can always be merged mathematically without conflicts.
+
+9. Explain the Circuit Breaker pattern. What are its three states, and how does it prevent cascading failures
+in a microservices architecture?
+Closed: Requests flow normally. Failures are tracked.
+Open: Failure threshold reached. Requests "fail fast" immediately without hitting the service.
+Half-Open: After a timeout, the system allows a few "test" requests. If they succeed, it closes the circuit; if they fail, it opens again.
+
+10. What is the difference between range-based partitioning and hash-based partitioning? What problem
+does consistent hashing solve compared to simple hash-mod-N partitioning?
+Range-based: Data is split by ranges (e.g., A-M, N-Z). Good for range queries, but can lead to "hotspots"
+
+Hash-based: Data is split by hash key. This distributes data evenly but makes range queries very expensive.
+
+Consistent Hashing: ensures that when a node is added or removed, only 1/N of the keys need to be remapped.
