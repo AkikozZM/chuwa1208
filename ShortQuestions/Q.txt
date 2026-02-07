@@ -1,0 +1,37 @@
+Q: What is Aspect Oriented Programming, what does "aspect" mean? Explain its use cases in detail?
+AOP is a programming concept that asking programmers to isolating cross-cutting concerns such as logging and security checks.
+
+Q: What are the advantages and disadvantages of Spring AOP?
+Adv: It separates the bussiness logic and logs. No need to manuaaly add logging/security code
+Disadv: Hard to debug.
+
+Q: Compare Spring AOP vs Java Reflection vs Spring Interceptor.
+Spring AOP typically use fo logging, transactions.
+Java Reflection use for framework building.
+Spring Interceptor use for Auth and request logging.
+
+Q: Explain following concept in your own words, you may include code snippet as part of your answer.
+1. Aspect: A class that contains Advice, Pointcuts
+2. PointCut: Where Advice should run.
+3. JoinPoint: Method call, Exception thrown, Method execution
+4. Advice: What should run.
+
+
+Q: How do we declare a pointcut, can we declare it without annotating an empty method?
+Name some expressions to do it.
+
+@Pointcut("execution(* com.app.service.*.*(..))")
+public void serviceLayer() {}
+
+@Before("execution(* com.app.service.*.*(..))")
+public void log() { }
+
+Q: Compare different types of advices in Spring AOP.
+
+Advice:
+@Before:	          Before method     	      Validation
+@After: 	          After method (always)   	Cleanup
+@AfterReturning:  	On success	              Logging result
+@AfterThrowing:   	On exception	            Error logging
+@Around:        	  Before & After	          Performance monitoring
+
