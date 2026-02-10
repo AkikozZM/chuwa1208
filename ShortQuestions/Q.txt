@@ -1,0 +1,189 @@
+Container Technology and Runtime - Quiz
+==========================================================================================================================================================================================
+Question 1: Containers vs Virtual Machines
+Explain the fundamental differences between containers and virtual machines. What makes containers
+more lightweight and faster to start?
+Your answer should cover:
+Architecture differences
+Resource sharing
+Startup time comparison
+Use case scenarios
+
+
+
+
+
+Answer: 
+Architecture: VMs run a full guest OS on a hypervisor (Type 1 or 2) and emulate or virtualize hardware. Containers share the host kernel and use namespaces and cgroups to isolate processes; they run as processes on the host, not separate OS instances.
+Resource sharing: VMs allocate fixed CPU, RAM, and disk per VM. Containers share the host kernel, libraries, and often filesystem layers; only the container process and its writable layer consume extra resources, so many more containers fit on the same host.
+Startup time: VMs typically boot in seconds to minutes (full OS boot). Containers start in milliseconds because they only start a process using the existing kernel.
+Use cases: Use VMs for strong isolation, different OSes, or legacy workloads. Use containers for microservices, CI/CD, dev/test, and scalable, portable application deployment.
+==========================================================================================================================================================================================
+Question 2: Linux Kernel Features for Containers
+Describe the role of Namespaces and Cgroups in containerization. Provide at least three examples of
+different namespace types and explain what each one isolates.
+Your answer should include:
+What namespaces provide
+What cgroups provide
+Specific namespace types (PID, NET, MNT, etc.)
+How they work together
+
+
+
+
+Answer: 
+Namespaces provide isolation of system resources so each container has its own view of PIDs, network, filesystem, etc. Cgroups (control groups) limit and account for CPU, memory, I/O, and other resources so one container cannot starve others.
+Namespace examples: (1) PID namespace—isolates process IDs; processes in the container see only their own PIDs. (2) NET namespace—isolates network interfaces, routing, and ports; each container has its own IP and ports. (3) MNT namespace—isolates mount points and filesystem view; container has its own root filesystem. Other types include UTS (hostname), IPC, and USER.
+Together: Namespaces provide isolation (what the process "sees"); cgroups provide resource limits (how much it can use). Both are required for safe, predictable containers.
+==========================================================================================================================================================================================
+Question 3: Container Image Layering
+Explain how container image layers work. What is the copy-on-write mechanism, and why is it
+important for container efficiency?
+Your answer should cover:
+Image layer structure
+Read-only vs writable layers
+Copy-on-write mechanism
+Benefits for storage and performance
+
+
+
+
+Answer: 
+Image layer structure: A container image is built from ordered, immutable layers (each typically from a Dockerfile instruction). The base layer might be an OS (e.g., Alpine), then layers add packages, app code, and config.
+Read-only vs writable: All image layers are read-only. When a container starts, a thin writable layer (container layer) is added on top; all writes go to this layer only.
+Copy-on-write (CoW): When the container modifies a file in a lower layer, the storage driver copies that file into the writable layer and applies the change. Unchanged data is never duplicated. Many containers share the same read-only layers.
+Benefits: CoW saves disk space and speeds up container creation; only the writable layer is per-container, so storage and I/O are efficient.
+==========================================================================================================================================================================================
+Question 4: OCI Standards
+What is the Open Container Initiative (OCI)? Describe the three main OCI specifications and explain
+why standardization is important for the container ecosystem.
+Your answer should include:
+Purpose of OCI
+Runtime Specification
+Image Specification
+Distribution Specification
+Benefits of standardization
+
+
+
+
+
+Answer: 
+Purpose of OCI: The Open Container Initiative (OCI) is a Linux Foundation project that defines vendor-neutral standards for container runtimes and images so that tools and platforms can interoperate.
+Runtime Specification: Defines how to run a "filesystem bundle" (config.json + root filesystem)—the contract for a low-level runtime (e.g., runc): configuration format, lifecycle (create, start, delete), and supported options.
+Image Specification: Defines the format of container images: image layout (manifest, layers, config), content-addressable storage, and how layers are applied. Ensures images built with one tool can run on any OCI-compliant runtime.
+Distribution Specification: Defines how images are pushed and pulled (e.g., over HTTP), including manifests, tags, and authentication. Enables consistent registries and clients.
+Benefits: Standardization avoids vendor lock-in, allows interoperability (Docker, Podman, Kubernetes), simplifies security tooling, and fosters a common ecosystem.
+==========================================================================================================================================================================================
+Question 5: Container Runtime Architecture
+Describe the container runtime hierarchy from Kubernetes down to the Linux kernel. Explain the
+responsibilities of each layer (orchestration, high-level runtime, low-level runtime).
+Your answer should cover:
+Kubernetes/orchestration layer
+High-level runtime (containerd/CRI-O)
+Low-level runtime (runc)
+How they interact
+
+
+
+
+
+Answer: 
+Kubernetes/orchestration layer: Kubernetes (kubelet) decides which pods/containers to run, where, and with what resources. It talks to a container runtime via the Container Runtime Interface (CRI).
+High-level runtime (containerd or CRI-O): Implements CRI. Manages container lifecycle (create, start, stop, delete), image pull/unpack, and metadata. Invokes a low-level runtime (e.g., runc) to create the actual container.
+Low-level runtime (runc): Creates the container process: sets up namespaces, cgroups, and the root filesystem, then runs the entrypoint. runc is the reference OCI Runtime implementation.
+Interaction: kubelet calls the high-level runtime via CRI; the high-level runtime pulls images and invokes runc to create and run each container. The kernel provides namespaces and cgroups used by runc.
+==========================================================================================================================================================================================
+Question 6: Container Runtime Interface (CRI)
+What is the Container Runtime Interface (CRI)? Explain how it enables Kubernetes to work with
+different container runtimes. What are the two main services it provides?
+Your answer should include:
+Purpose of CRI
+RuntimeService operations
+ImageService operations
+Benefits of abstraction
+
+
+
+
+Answer: 
+Purpose of CRI: The Container Runtime Interface (CRI) is a plugin interface that defines how the kubelet talks to the container runtime. It allows Kubernetes to support different runtimes (containerd, CRI-O, etc.) without changing Kubernetes code.
+RuntimeService: Handles container and sandbox (pod) lifecycle—RunPodSandbox, StopPodSandbox, CreateContainer, StartContainer, StopContainer, RemoveContainer, and status. Kubernetes uses this to create, start, stop, and remove containers.
+ImageService: Handles image operations—PullImage, ListImages, ImageStatus, RemoveImage, ImageFsInfo. Kubernetes uses this to pull images before starting containers and to manage image storage.
+Benefits: CRI decouples Kubernetes from any single runtime; vendors can plug in containerd, CRI-O, or others. It enables innovation in runtimes while keeping the orchestration layer stable.
+==========================================================================================================================================================================================
+Question 7: Java Container Awareness
+Explain the historical problem Java had with containers before JDK 8u191/JDK 10. How did modern
+JDK versions solve this problem? What JVM options should be used for memory configuration in
+containers?
+Your answer should cover:
+The pre-JDK 10 problem
+Container support improvements
+Recommended JVM options (MaxRAMPercentage, etc.)
+Why this matters for production
+
+
+
+
+
+Answer: 
+Pre-JDK 10 problem: The JVM read memory limits from the host (e.g., /proc/meminfo), not from cgroups. In a container with a 512MB limit, the JVM might see 16GB host RAM and set heap accordingly, leading to OOM kills when the container limit was exceeded.
+Container support: From JDK 8u191 and JDK 10 onward, the JVM is cgroup-aware: it reads memory limits from cgroup v1 or v2 and uses that as the "physical" memory when sizing the heap and other areas.
+Recommended JVM options: Use -XX:MaxRAMPercentage (e.g., 75.0) to set max heap as a percentage of the container memory limit, and -XX:InitialRAMPercentage for initial heap. Example: -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0. This keeps the heap within the container limit and leaves room for metaspace and native memory.
+Why it matters: Correct memory settings prevent OOM kills and allow predictable resource usage in Kubernetes (requests/limits). Wrong settings cause crashes and resource contention in production.
+==========================================================================================================================================================================================
+Question 8: Multi-stage Docker Builds
+Explain what multi-stage builds are and why they are important. Provide a practical example scenario
+where multi-stage builds would significantly reduce image size.
+Your answer should include:
+What multi-stage builds are
+Benefits (size reduction, security)
+Example use case (Java/Maven build)
+Impact on deployment
+
+
+
+
+Answer: 
+What multi-stage builds are: A single Dockerfile with multiple FROM instructions. Each FROM starts a new build stage; you can copy artifacts from earlier stages into later ones. Only the final stage's layers end up in the image; earlier stages are discarded.
+Benefits: They reduce image size by excluding build tools (compilers, Maven, npm) and intermediate files from the final image. They also improve security by having a smaller attack surface.
+Example (Java/Maven): Stage 1 uses maven:3 to run "mvn package" and produce a JAR. Stage 2 uses eclipse-temurin:17-jre and COPY --from=0 target/app.jar . Only the JRE and the JAR are in the final image, not Maven or source. Image size can drop from over 700MB to under 200MB.
+Impact: Smaller images mean faster pulls, less storage, and quicker cold starts. They align with minimal, production-ready images and security best practices.
+==========================================================================================================================================================================================
+Question 9: Container Networking
+Describe the different Docker network modes (bridge, host, none, overlay). When would you use each
+mode? What is the role of CNI plugins in Kubernetes networking?
+Your answer should cover:
+Bridge mode (default)
+Host mode
+None mode
+Overlay mode
+CNI plugins and examples
+
+
+
+
+
+Answer: 
+Bridge mode (default): Containers get their own network namespace and connect via a virtual bridge (docker0). Each container has a private IP; Docker does NAT for external access. Use for general-purpose single-host container networking.
+Host mode: Container shares the host's network stack. No network isolation; container uses host IP and ports directly. Use when you need maximum performance or direct access to host network.
+None mode: Container has no network interfaces (except loopback). Use for fully isolated or batch jobs that do not need network access.
+Overlay mode: Connects containers across multiple Docker hosts using an overlay network (e.g., VXLAN). Used in Docker Swarm or multi-host setups for service discovery and cross-node communication.
+CNI in Kubernetes: The Container Network Interface (CNI) is a standard that Kubernetes uses to configure pod networking. The kubelet invokes CNI plugins to add/remove pods from the network. Examples: Calico, Flannel, Cilium, Weave. CNI provides pod-to-pod communication and can enforce network policies.
+==========================================================================================================================================================================================
+Question 10: Container Storage
+Explain the different types of storage available in containers (volumes, bind mounts, tmpfs). What are
+the performance and persistence characteristics of each? When would you use each type?
+Your answer should include:
+Named volumes
+Bind mounts
+tmpfs
+Performance considerations
+Use case scenarios
+
+Answer: 
+Named volumes: Docker-managed storage created with “docker volume create” or implicitly by the driver. Data lives in a host path managed by Docker (e.g., /var/lib/docker/volumes/...). Persists after container removal; can be shared between containers; good for databases, configs, and shared data. Performance is typically good (local disk or driver-optimized).
+Bind mounts: Map a specific host path into the container. Data is stored directly on the host at that path. Full persistence and direct host access; useful for dev (live code sync), host configs, or when you need a known host path. Performance is high (no extra abstraction), but portability is lower and host paths vary by OS.
+tmpfs: Storage in host RAM; nothing is written to disk. Very fast but ephemeral—data is lost when the container stops. Use for sensitive temporary data (e.g., secrets, temp files) or high-speed scratch space that does not need to persist.
+When to use each: Named volumes for production data that must persist and be portable. Bind mounts for development or when you need a fixed host path. tmpfs for non-persistent, fast, or security-sensitive temporary data.
+==========================================================================================================================================================================================
