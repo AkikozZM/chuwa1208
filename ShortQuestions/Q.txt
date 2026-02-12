@@ -1,0 +1,229 @@
+Q1. Three Pillars of Observability
+
+The three pillars are:
+
+1. Metrics
+
+What: Numeric measurements over time (CPU usage, request count, latency).
+
+Purpose: Real-time monitoring and alerting.
+
+Best for: Detecting system health and trends.
+
+2. Logs
+
+What: Timestamped records of events.
+
+Purpose: Detailed debugging and forensic analysis.
+
+Best for: Understanding what exactly happened.
+
+3️. Traces
+
+What: End-to-end request flow across services.
+
+Purpose: Diagnose latency and service dependencies.
+
+Best for: Debugging distributed systems.
+
+
+
+===============================================================================
+Q2. Four Common Metric Types
+1️. Counter
+
+Only increases (resets on restart).
+
+Example: Total HTTP requests.
+
+Good for rates (rate() in Prometheus).
+
+2️. Gauge
+
+Can increase or decrease.
+
+Example: Memory usage, CPU load.
+
+3️. Histogram
+
+Measures distribution of values using buckets.
+
+Example: Request latency distribution.
+
+Used for calculating percentiles.
+
+4️ Summary
+
+Similar to histogram but calculates quantiles client-side.
+
+Example: 95th percentile latency.
+
+Less flexible than histogram in aggregation.
+
+
+
+===============================================================================
+Q3. Structured Logging
+What is it?
+
+Logs stored in structured format (usually JSON) instead of plain text.
+
+Example:
+
+{
+  "timestamp": "2026-02-11T10:00:00Z",
+  "level": "ERROR",
+  "service": "payment",
+  "userId": 1234,
+  "message": "Payment failed"
+}
+
+Why preferred?
+
+- Searchable (by fields like userId, service)
+- Easier aggregation
+- Machine readable
+- Better integration with tools (ELK, Splunk, Loki)
+- Plain text logs are hard to parse and analyze at scale.
+
+
+===============================================================================
+Q4. 4. Distributed Tracing: Trace, Span, Context
+Trace: Entire request lifecycle across services.
+
+Span: Single operation within a trace (DB call, API call).
+
+Context Propagation: Mechanism to pass trace ID and span ID between services (usually via HTTP headers like traceparent).
+
+Relationship:
+A trace contains multiple spans.
+
+Context propagation connects spans across services.
+
+Enables full end-to-end visibility.
+
+
+
+===============================================================================
+Q5. Prometheus Pull Model
+How Pull Works:
+
+Prometheus periodically scrapes /metrics endpoint from services.
+
+Services expose metrics.
+
+Prometheus collects them at defined intervals.
+
+Advantages:
+
+Centralized control
+
+Easier service discovery (Kubernetes integration)
+
+No need for clients to know Prometheus location
+
+More resilient (Prometheus detects down targets)
+
+Disadvantages:
+
+Harder across firewalls
+
+Not ideal for short-lived jobs (requires Pushgateway)
+
+
+===============================================================================
+Q6. Control Plane Components
+1️. API Server
+
+Front door of Kubernetes.
+
+Validates and processes REST requests.
+
+2️. etcd
+
+Distributed key-value store.
+
+Stores cluster state (single source of truth).
+
+3️. Controller Manager
+
+Runs controllers (ReplicaSet, Node, Deployment).
+
+Maintains desired vs actual state.
+
+4️. Scheduler
+
+Assigns Pods to nodes.
+
+Decides where workloads run.
+
+
+
+===============================================================================
+Q7. kubelet
+- Agent running on every worker node.
+- Ensures containers are running in Pods.
+- Communicates with API server.
+
+
+
+===============================================================================
+Q8. etcd
+- Distributed key-value store.
+- It stores: Pods, ConfigMaps, Secrets, Nodes, Cluster state
+
+- If etcd is lost → cluster state is lost → cluster fails.
+
+
+
+
+===============================================================================
+Q9. kube-proxy
+
+Runs on every node.
+
+Manages Service networking.
+
+Uses iptables or IPVS.
+
+Routes traffic to correct Pod backend.
+
+Example:
+Service → kube-proxy → Pod endpoints
+
+
+
+===============================================================================
+Q10. Kubernetes Scheduler
+
+The scheduler decides node placement in two phases:
+
+1️. Filtering (Feasibility)
+
+Removes nodes that don't meet requirements:
+
+CPU / Memory requests
+
+NodeSelector
+
+Taints / tolerations
+
+Node affinity
+
+Volume constraints
+
+2️. Scoring (Ranking)
+
+Ranks remaining nodes based on:
+
+Resource balance
+
+Least requested resources
+
+Affinity rules
+
+Pod topology spread
+
+Inter-pod affinity/anti-affinity
+
+Then selects the highest-scored node.
